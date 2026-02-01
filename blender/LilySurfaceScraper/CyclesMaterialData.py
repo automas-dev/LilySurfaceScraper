@@ -34,7 +34,7 @@ class CyclesMaterialData(MaterialData):
         'baseColor': 'Base Color',
         'roughness': 'Roughness',
         'metallic': 'Metallic',
-        'specular': 'Specular',
+        'specular': 'Specular IOR Level',
         'opacity': 'Alpha',
         'emission': 'Emission',
         'diffuse': '',
@@ -147,19 +147,48 @@ class CyclesMaterialData(MaterialData):
 
         group = bpy.data.node_groups.new(name, "ShaderNodeTree")
 
+        # Define interface
+        color_input = group.interface.new_socket(
+            name="ARM map",
+            description="ARM map",
+            in_out='INPUT',
+            socket_type='NodeSocketColor',
+        )
+        # color_input.default_value = (1.0, 1.0, 1.0, 1.0)
+
+        ao_output = group.interface.new_socket(
+            name="AO",
+            description="AO",
+            in_out='OUTPUT',
+            socket_type='NodeSocketFloat'
+        )
+        # ao_output.default_value = 0.0
+
+        metal_output = group.interface.new_socket(
+            name="Metalness",
+            description="Metalness",
+            in_out='OUTPUT',
+            socket_type='NodeSocketFloat'
+        )
+        # metal_output.default_value = 0.0
+
+        rough_output = group.interface.new_socket(
+            name="Roughness",
+            description="Roughness",
+            in_out='OUTPUT',
+            socket_type='NodeSocketFloat'
+        )
+        # rough_output.default_value = 0.0
+
         # input
         group_inputs = group.nodes.new("NodeGroupInput")
         group_inputs.location = (-200, 0)
-        group.inputs.new("NodeSocketColor", "ARM map")
 
         # output
         group_outputs = group.nodes.new("NodeGroupOutput")
         group_outputs.location = (200, 0)
-        group.outputs.new("NodeSocketFloat", "AO")
-        group.outputs.new("NodeSocketFloat", "Metalness")
-        group.outputs.new("NodeSocketFloat", "Roughness")
 
-        separate = group.nodes.new("ShaderNodeSeparateRGB")
+        separate = group.nodes.new("ShaderNodeSeparateColor")
 
         # link
         group.links.new(group_inputs.outputs['ARM map'], separate.inputs[0])
@@ -167,9 +196,9 @@ class CyclesMaterialData(MaterialData):
         # Blue channel is metalness map
         # Red channel is ambient occlusion
         # Green is roughness
-        group.links.new(separate.outputs["R"], group_outputs.inputs['AO'])
-        group.links.new(separate.outputs["G"], group_outputs.inputs['Roughness'])
-        group.links.new(separate.outputs["B"], group_outputs.inputs['Metalness'])
+        group.links.new(separate.outputs["Red"], group_outputs.inputs['AO'])
+        group.links.new(separate.outputs["Green"], group_outputs.inputs['Roughness'])
+        group.links.new(separate.outputs["Blue"], group_outputs.inputs['Metalness'])
 
         return group
 
